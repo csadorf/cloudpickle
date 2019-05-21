@@ -1074,6 +1074,17 @@ class CloudPickleTest(unittest.TestCase):
         cloned = pickle_depickle(func, protocol=self.protocol)
         self.assertEqual(cloned.__module__, func.__module__)
 
+    def test_function_lru_cache_wrapped(self):
+        from functools import lru_cache
+
+        @lru_cache()
+        def func(x):
+            return x
+
+        cloned = pickle_depickle(func, protocol=self.protocol)
+        self.assertEqual(cloned.__module__, func.__module__)
+        self.assertEqual(func('test'), cloned('test'))
+
     def test_function_qualname(self):
         def func(x):
             return x
