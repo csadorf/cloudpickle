@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from __future__ import print_function
 
 import dis
-from functools import partial
+from functools import partial, _lru_cache_wrapper
 import io
 import itertools
 import logging
@@ -449,6 +449,11 @@ class CloudPickler(Pickler):
             self.memoize(obj)
 
     dispatch[types.FunctionType] = save_function
+
+    def save_lru_cache_wrapped_function(self, obj):
+        self.save_function(obj.__wrapped__)
+
+    dispatch[_lru_cache_wrapper] = save_lru_cache_wrapped_function
 
     def _save_subimports(self, code, top_level_dependencies):
         """
@@ -1091,6 +1096,10 @@ def _restore_attr(obj, attr):
         setattr(obj, key, val)
     return obj
 
+
+def _restore_lru_cache_wrapper(obj):
+    from functools import lru_cache
+    return lru_cache()(obj)
 
 def _gen_ellipsis():
     return Ellipsis
